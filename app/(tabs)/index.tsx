@@ -1,98 +1,290 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { PostWithImages } from '@/types/database';
+import { PostCard } from '@/components/PostCard';
+import { useAuth } from '@/contexts/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Spacing, BorderRadius, Typography, CategoryIcons, Shadows } from '@/constants/theme';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const CATEGORIES = ['All', 'Electronics', 'Books', 'Furniture', 'Clothing', 'Other'];
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+export default function FeedScreen() {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<PostWithImages[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      // RLS policy automatically filters out blocked users' posts
+      let query = supabase
+        .from('posts')
+        .select(`
+          *,
+          post_images (*),
+          profiles (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (selectedCategory !== 'All') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setPosts(data as PostWithImages[]);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchPosts();
+  };
+
+  const renderPost = ({ item }: { item: PostWithImages }) => (
+    <PostCard post={item} />
+  );
+
+  const renderCategoryChip = ({ item }: { item: string }) => {
+    const isActive = selectedCategory === item;
+    const iconName = CategoryIcons[item] || 'ellipsis-horizontal-outline';
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.categoryChip,
+          isActive && styles.categoryChipActive,
+        ]}
+        onPress={() => setSelectedCategory(item)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={iconName as any}
+          size={16}
+          color={isActive ? Colors.background : Colors.textSecondary}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+        <Text
+          style={[
+            styles.categoryChipText,
+            isActive && styles.categoryChipTextActive,
+          ]}
+        >
+          {item}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Loading items...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrapper}>
+          <Ionicons name="search" size={20} color={Colors.textTertiary} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search items..."
+            placeholderTextColor={Colors.textTertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={fetchPosts}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={18} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Category Chips */}
+      <View style={styles.categoriesContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={CATEGORIES}
+          keyExtractor={(item) => item}
+          renderItem={renderCategoryChip}
+          contentContainerStyle={styles.categoriesList}
+        />
+      </View>
+
+      {/* Posts Grid */}
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="basket-outline" size={48} color={Colors.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>No items found</Text>
+            <Text style={styles.emptyText}>
+              {searchQuery
+                ? `No results for "${searchQuery}"`
+                : 'Be the first to list an item!'}
+            </Text>
+          </View>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    gap: Spacing.md,
+  },
+  loadingText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.md,
+  },
+  searchContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
+  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: Colors.backgroundCard,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  searchIcon: {
+    marginRight: Spacing.sm,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  searchInput: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+  },
+  clearButton: {
+    padding: Spacing.xs,
+  },
+  categoriesContainer: {
+    marginTop: Spacing.lg,
+  },
+  categoriesList: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm + 2,
+    backgroundColor: Colors.backgroundCard,
+    borderRadius: BorderRadius.full,
+    marginRight: Spacing.sm,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  categoryChipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+    ...Shadows.glow,
+  },
+  categoryChipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  categoryChipTextActive: {
+    color: Colors.background,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  list: {
+    padding: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
+  row: {
+    justifyContent: 'space-between',
+  },
+  empty: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: Spacing.xxxl * 2,
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.backgroundCard,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  emptyTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
+    marginBottom: Spacing.sm,
+  },
+  emptyText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.md,
+    textAlign: 'center',
   },
 });

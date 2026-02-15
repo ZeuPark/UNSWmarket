@@ -1,41 +1,158 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+// UNSW Market Theme Constants
+// Premium dark theme with gold accents
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
+  // Primary palette
+  primary: '#FFD700',
+  primaryLight: '#FFE44D',
+  primaryDark: '#CCB000',
+  primaryMuted: 'rgba(255, 215, 0, 0.15)',
+
+  // Background colors
+  background: '#0A0A0A',
+  backgroundElevated: '#141414',
+  backgroundCard: '#1C1C1E',
+  backgroundInput: '#2C2C2E',
+
+  // Surface colors with subtle warmth
+  surface: '#1C1C1E',
+  surfaceHover: '#252528',
+  surfaceBorder: '#3A3A3C',
+
+  // Text colors
+  textPrimary: '#FFFFFF',
+  textSecondary: '#A1A1A6',
+  textTertiary: '#6E6E73',
+  textMuted: '#48484A',
+
+  // Status colors
+  success: '#34C759',
+  warning: '#FF9F0A',
+  error: '#FF453A',
+  info: '#0A84FF',
+
+  // Overlay
+  overlay: 'rgba(0, 0, 0, 0.85)',
+  overlayLight: 'rgba(0, 0, 0, 0.5)',
+
+  // Legacy support
   light: {
     text: '#11181C',
     background: '#fff',
-    tint: tintColorLight,
+    tint: '#0a7ea4',
     icon: '#687076',
     tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    tabIconSelected: '#0a7ea4',
   },
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: tintColorDark,
+    tint: '#fff',
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: '#fff',
   },
+};
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+  xxxl: 48,
+};
+
+export const BorderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 9999,
+};
+
+export const Typography = {
+  fontSize: {
+    xs: 11,
+    sm: 13,
+    md: 15,
+    lg: 17,
+    xl: 20,
+    xxl: 24,
+    xxxl: 32,
+    display: 40,
+  },
+  lineHeight: {
+    tight: 1.2,
+    normal: 1.4,
+    relaxed: 1.6,
+  },
+  fontWeight: {
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
+    heavy: '800' as const,
+  },
+};
+
+export const Shadows = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  glow: {
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+};
+
+// Status badge colors
+export const StatusColors: { [key: string]: string } = {
+  available: Colors.success,
+  reserved: Colors.warning,
+  sold: Colors.error,
+};
+
+// Category icons mapping
+export const CategoryIcons: { [key: string]: string } = {
+  All: 'grid-outline',
+  Electronics: 'laptop-outline',
+  Books: 'book-outline',
+  Furniture: 'bed-outline',
+  Clothing: 'shirt-outline',
+  Other: 'ellipsis-horizontal-outline',
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
