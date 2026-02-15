@@ -21,6 +21,12 @@ A student-only marketplace app for UNSW (University of New South Wales) students
 - Edit and delete your own listings
 - Mark items as Available, Reserved, or Sold
 
+### Messaging
+- 1:1 chat with sellers
+- Real-time message delivery (Supabase Realtime)
+- Unread message badges
+- Blocked users cannot message each other
+
 ### User Features
 - Customizable user profiles
 - View your listings
@@ -127,6 +133,8 @@ A student-only marketplace app for UNSW (University of New South Wales) students
      created_at TIMESTAMPTZ DEFAULT NOW()
    );
    ```
+
+   Then run the messaging schema from `supabase/messaging-schema.sql` to enable chat functionality.
 
 5. **Create Storage bucket**
 

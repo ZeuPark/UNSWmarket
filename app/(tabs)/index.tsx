@@ -49,7 +49,7 @@ export default function FeedScreen() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setPosts(data as PostWithImages[]);
+      setPosts(data as any as PostWithImages[]);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {

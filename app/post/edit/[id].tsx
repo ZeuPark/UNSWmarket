@@ -55,7 +55,7 @@ export default function EditPostScreen() {
 
       if (error) throw error;
 
-      const postData = data as PostWithImages;
+      const postData = data as any as PostWithImages;
 
       // Check ownership
       if (postData.user_id !== user?.id) {

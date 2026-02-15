@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase, uploadImage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors, Spacing, BorderRadius, Typography, CategoryIcons, Shadows } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, Typography, CategoryIcons, Shadows, CampusLocations } from '@/constants/theme';
 
 const CATEGORIES = ['Electronics', 'Books', 'Furniture', 'Clothing', 'Other'];
 
@@ -29,6 +29,7 @@ export default function CreatePostScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Electronics');
+  const [location, setLocation] = useState('negotiable');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -86,6 +87,7 @@ export default function CreatePostScreen() {
           description: description.trim(),
           price: parseInt(price),
           category,
+          location,
         })
         .select()
         .single();
@@ -113,6 +115,7 @@ export default function CreatePostScreen() {
             setTitle('');
             setDescription('');
             setPrice('');
+            setLocation('negotiable');
             setImages([]);
             router.replace('/(tabs)');
           },
@@ -255,6 +258,41 @@ export default function CreatePostScreen() {
                     ]}
                   >
                     {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Location Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Meetup Location</Text>
+          <View style={styles.locations}>
+            {CampusLocations.map((loc) => {
+              const isActive = location === loc.id;
+              return (
+                <TouchableOpacity
+                  key={loc.id}
+                  style={[
+                    styles.locationButton,
+                    isActive && styles.locationButtonActive,
+                  ]}
+                  onPress={() => setLocation(loc.id)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={loc.icon as any}
+                    size={18}
+                    color={isActive ? Colors.background : Colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.locationText,
+                      isActive && styles.locationTextActive,
+                    ]}
+                  >
+                    {loc.label}
                   </Text>
                 </TouchableOpacity>
               );
@@ -454,6 +492,36 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeight.medium,
   },
   categoryTextActive: {
+    color: Colors.background,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  locations: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: -Spacing.sm,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.backgroundCard,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    gap: Spacing.xs,
+  },
+  locationButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  locationText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  locationTextActive: {
     color: Colors.background,
     fontWeight: Typography.fontWeight.semibold,
   },

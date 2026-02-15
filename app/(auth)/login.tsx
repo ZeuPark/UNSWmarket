@@ -11,10 +11,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { supabase, isUNSWEmail } from '@/lib/supabase';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '@/constants/theme';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -51,15 +53,21 @@ export default function LoginScreen() {
           'A verification link has been sent to your UNSW email.'
         );
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
+
+        if (!data.session) {
+          throw new Error('No session created');
+        }
+
+        router.replace('/(tabs)');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error?.message || 'Unknown error occurred');
     } finally {
       setLoading(false);
     }

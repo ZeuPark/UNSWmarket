@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { PostWithImages } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
+import { Colors, CampusLocations, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export default function PostDetailScreen() {
   const [post, setPost] = useState<PostWithImages | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [contactLoading, setContactLoading] = useState(false);
 
   useEffect(() => {
     fetchPost();
@@ -44,7 +46,7 @@ export default function PostDetailScreen() {
         .single();
 
       if (error) throw error;
-      setPost(data as PostWithImages);
+      setPost(data as any as PostWithImages);
     } catch (error) {
       console.error('Error fetching post:', error);
       Alert.alert('Error', 'Failed to load post');
@@ -162,6 +164,47 @@ export default function PostDetailScreen() {
     }
   };
 
+  const handleContactSeller = async () => {
+    if (!post || !user) return;
+
+    setContactLoading(true);
+    try {
+      // Check if conversation already exists
+      const { data: existingConv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('buyer_id', user.id)
+        .eq('seller_id', post.user_id)
+        .single();
+
+      if (existingConv) {
+        // Navigate to existing conversation
+        router.push(`/chat/${existingConv.id}` as any);
+        return;
+      }
+
+      // Create new conversation
+      const { data: newConv, error } = await supabase
+        .from('conversations')
+        .insert({
+          post_id: post.id,
+          buyer_id: user.id,
+          seller_id: post.user_id,
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      router.push(`/chat/${newConv.id}` as any);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to start conversation');
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loading}>
@@ -236,6 +279,21 @@ export default function PostDetailScreen() {
 
         <Text style={styles.title}>{post.title}</Text>
         <Text style={styles.category}>{post.category}</Text>
+
+        {/* Location */}
+        {post.location && (
+          <View style={styles.locationContainer}>
+            <Ionicons
+              name={(CampusLocations.find(l => l.id === post.location)?.icon || 'location-outline') as any}
+              size={16}
+              color={Colors.primary}
+            />
+            <Text style={styles.locationText}>
+              {CampusLocations.find(l => l.id === post.location)?.label || post.location}
+            </Text>
+          </View>
+        )}
+
         <Text style={styles.description}>{post.description}</Text>
 
         {/* Seller Info */}
@@ -291,9 +349,19 @@ export default function PostDetailScreen() {
           </View>
         ) : (
           <View style={styles.buyerActions}>
-            <TouchableOpacity style={styles.contactButton}>
-              <Ionicons name="mail" size={20} color="#000" />
-              <Text style={styles.contactButtonText}>Contact Seller</Text>
+            <TouchableOpacity
+              style={[styles.contactButton, contactLoading && styles.contactButtonDisabled]}
+              onPress={handleContactSeller}
+              disabled={contactLoading}
+            >
+              {contactLoading ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <>
+                  <Ionicons name="chatbubble" size={20} color="#000" />
+                  <Text style={styles.contactButtonText}>Contact Seller</Text>
+                </>
+              )}
             </TouchableOpacity>
             <View style={styles.secondaryActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleReport}>
@@ -404,7 +472,23 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 14,
     color: '#888',
+    marginBottom: 8,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 16,
+    backgroundColor: Colors.primaryMuted,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  locationText: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontWeight: '500',
   },
   description: {
     fontSize: 16,
@@ -511,6 +595,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     marginBottom: 12,
+  },
+  contactButtonDisabled: {
+    opacity: 0.7,
   },
   contactButtonText: {
     color: '#000',

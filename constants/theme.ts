@@ -67,6 +67,7 @@ export const Spacing = {
 };
 
 export const BorderRadius = {
+  xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
@@ -147,6 +148,23 @@ export const CategoryIcons: { [key: string]: string } = {
   Clothing: 'shirt-outline',
   Other: 'ellipsis-horizontal-outline',
 };
+
+// Campus locations for meetup
+export const CampusLocations = [
+  { id: 'negotiable', label: 'To be discussed', icon: 'chatbubbles-outline' },
+  { id: 'main_library', label: 'Main Library', icon: 'library-outline' },
+  { id: 'quadrangle', label: 'Quadrangle', icon: 'business-outline' },
+  { id: 'ainsworth', label: 'Ainsworth Building', icon: 'school-outline' },
+  { id: 'mathews', label: 'Mathews Building', icon: 'calculator-outline' },
+  { id: 'red_centre', label: 'Red Centre', icon: 'color-palette-outline' },
+  { id: 'law_building', label: 'Law Building', icon: 'briefcase-outline' },
+  { id: 'roundhouse', label: 'Roundhouse', icon: 'restaurant-outline' },
+  { id: 'scientia', label: 'Scientia Building', icon: 'flask-outline' },
+  { id: 'village', label: 'UNSW Village', icon: 'home-outline' },
+  { id: 'other', label: 'Other', icon: 'location-outline' },
+] as const;
+
+export type CampusLocationId = typeof CampusLocations[number]['id'];
 
 export const Fonts = Platform.select({
   ios: {

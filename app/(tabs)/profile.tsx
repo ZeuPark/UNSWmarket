@@ -40,7 +40,7 @@ export default function ProfileScreen() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMyPosts(data as PostWithImages[]);
+      setMyPosts(data as any as PostWithImages[]);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
