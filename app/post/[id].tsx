@@ -349,20 +349,27 @@ export default function PostDetailScreen() {
           </View>
         ) : (
           <View style={styles.buyerActions}>
-            <TouchableOpacity
-              style={[styles.contactButton, contactLoading && styles.contactButtonDisabled]}
-              onPress={handleContactSeller}
-              disabled={contactLoading}
-            >
-              {contactLoading ? (
-                <ActivityIndicator size="small" color="#000" />
-              ) : (
-                <>
-                  <Ionicons name="chatbubble" size={20} color="#000" />
-                  <Text style={styles.contactButtonText}>Contact Seller</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {post.status === 'sold' ? (
+              <View style={styles.soldBanner}>
+                <Ionicons name="checkmark-circle" size={24} color={Colors.error} />
+                <Text style={styles.soldBannerText}>This item has been sold</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.contactButton, contactLoading && styles.contactButtonDisabled]}
+                onPress={handleContactSeller}
+                disabled={contactLoading}
+              >
+                {contactLoading ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <>
+                    <Ionicons name="chatbubble" size={20} color="#000" />
+                    <Text style={styles.contactButtonText}>Contact Seller</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
             <View style={styles.secondaryActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleReport}>
                 <Ionicons name="flag" size={20} color="#888" />
@@ -603,6 +610,23 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  soldBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  soldBannerText: {
+    color: Colors.error,
+    fontSize: 16,
+    fontWeight: '600',
   },
   secondaryActions: {
     flexDirection: 'row',
